@@ -1,0 +1,80 @@
+﻿@{
+    ViewData["Title"] = "Home Page";
+}
+
+<style>
+    .ag-theme-balham .warning {
+        background-color: sandybrown !important;
+    }
+</style>
+
+<script src="https://unpkg.com/ag-grid-community/dist/ag-grid-community.min.noStyle.js"></script>
+<link rel="stylesheet" href="https://unpkg.com/ag-grid-community/dist/styles/ag-grid.css">
+<link rel="stylesheet" href="https://unpkg.com/ag-grid-community/dist/styles/ag-theme-balham.css">
+
+<script src="https://unpkg.com/pnotify@4.0.0/dist/umd/PNotify.js"></script>
+<link href="https://unpkg.com/pnotify@4.0.0/dist/PNotifyBrightTheme.css" rel="stylesheet">
+
+<div class="text-center">
+    <h1 class="display-4">Welcome</h1>
+    <p>Learn about <a href="https://docs.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+</div>
+
+<div id="myGrid" style="height: 600px; width: 100%;" class="ag-theme-balham"></div>
+
+<script type="text/javascript" charset="utf-8">
+
+    var columnDefs = [
+        { headerName: "Id", field: "productId", hide: true },
+        { headerName: "Name", field: "name" },
+        { headerName: "Product Number", field: "productNumber" },
+        { headerName: "Quantity", field: "quantity", filter: 'agNumberColumnFilter', editable: true },
+        { headerName: "Category", field: "category" },
+        { headerName: "SubCategory", field: "subCategory" }
+    ];
+
+    var gridOptions = {
+        columnDefs: columnDefs,
+        defaultColDef: {
+            sortable: true,
+            filter: true,
+            resizable: true
+        },
+        rowClassRules: {
+            'warning': function (params) {
+                var numExpense = params.data.quantity;
+                return numExpense <= 50;
+            }
+        },
+        onCellEditingStopped: function (event) {
+           
+            $.ajax({
+                type: "POST",
+                url: "../UpdateProductInventory",
+                data: {
+                    ProductId: event.data.productId,
+                    Quantity: event.value
+                },
+                success: function (response) {
+                    PNotify.success({
+                        text: "Quantity updated successfully!!",
+                        delay: 800
+                    });
+                }
+            });
+        }
+    };
+
+    var eGridDiv = document.querySelector('#myGrid');
+
+    new agGrid.Grid(eGridDiv, gridOptions);
+
+    agGrid.simpleHttpRequest({ url: './GetProductData' }).then(function (data) {
+
+        gridOptions.api.setRowData(data);
+
+        gridOptions.api.sizeColumnsToFit();
+    });
+
+
+</script>
